@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupportBot — AI Customer Support Agent</title>
+    <style>
+        :root {
+            --bg-start: #1e293b;
+            --bg-end: #0f172a;
+            --card-bg: #ffffff;
+            --chat-panel-bg: #f1f5f9;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            min-height: 100vh;
+            color: #1e293b;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 20px;
+            gap: 20px;
+        }
+        .dashboard {
+            flex: 1 1 400px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        .dashboard h1 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #0f172a;
+        }
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            font-weight: 500;
+            color: #475569;
+        }
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: #f8fafc;
+        }
+        textarea {
+            height: 150px;
+            resize: vertical;
+        }
+        input[type="file"] {
+            margin-top: 10px;
+        }
+        .btn-generate {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 14px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        .btn-generate:hover {
+            background: var(--accent-hover);
+        }
+        #embedSection {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 12px;
+        }
+        #embedSection h3 {
+            margin-bottom: 10px;
+            color: #1e293b;
+        }
+        #embedSection pre {
+            background: #e2e8f0;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+        .chat-preview {
+            flex: 1 1 400px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            max-height: 600px;
+        }
+        .chat-header {
+            background: var(--accent);
+            color: #fff;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 16px 16px 0 0;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            max-width: 80%;
+            clear: both;
+        }
+        .message.user {
+            background: var(--accent);
+            color: #fff;
+            float: right;
+        }
+        .message.bot {
+            background: #e2e8f0;
+            color: #1e293b;
+            float: left;
+        }
+        .chat-input-area {
+            display: flex;
+            border-top: 1px solid #cbd5e1;
+            padding: 10px;
+        }
+        .chat-input-area input {
+            flex: 1;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        .chat-input-area button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .chat-preview {
+                max-height: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Panel: Dashboard -->
+        <div class="dashboard">
+            <h1>🤖 SupportBot Dashboard</h1>
+            <label for="botName">Bot Name</label>
+            <input type="text" id="botName" placeholder="e.g., Acme Help Bot" value="Acme Help Bot">
+            <label for="knowledgeBase">Knowledge Base</label>
+            <textarea id="knowledgeBase" placeholder="Paste your FAQ, product details, or any text the bot should know…">We are open Monday to Friday, 9 AM to 5 PM EST.
+Returns are accepted within 30 days with receipt.
+Standard shipping takes 3-5 business days.
+Express shipping takes 1-2 business days.</textarea>
+            <input type="file" id="fileUpload" accept=".txt">
+            <button class="btn-generate" id="generateBtn">Generate Bot</button>
+            <div id="embedSection" style="display:none;">
+                <h3>📋 Embed Code</h3>
+                <p>Copy this script tag and paste it into your website's HTML:</p>
+                <pre>&lt;script src="https://supportbot-ai.netlify.app/widget.js"&gt;&lt;/script&gt;</pre>
+
+                <!-- Hostinger Affiliate Section (placed right below embed) -->
+                <div style="text-align: center; margin: 30px 0 10px; padding: 20px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; font-family: system-ui, sans-serif;">
+                    <h3 style="color: #1e293b; margin-bottom: 8px;">🚀 Host Your Bot on Blazing‑Fast Servers</h3>
+                    <p style="color: #475569; font-size: 14px; line-height: 1.5;">Your AI support bot needs reliable hosting. We recommend <strong>Hostinger</strong> — plans start at just $2.99/month with SSD storage and 24/7 support.</p>
+                    <a href="#" target="_blank" rel="nofollow" style="display: inline-block; padding: 12px 28px; background-color: #3b82f6; color: white; border-radius: 6px; font-weight: bold; text-decoration: none; font-size: 15px; margin: 12px 0; transition: background 0.3s;">Explore Hostinger Plans</a>
+                    <p style="font-size: 11px; color: #94a3b8; margin-top: 8px;">We may earn a commission if you make a purchase, at no extra cost to you.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Chat Preview -->
+        <div class="chat-preview">
+            <div class="chat-header" id="chatHeader">Acme Help Bot</div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">Hi! 👋 I'm your AI support assistant. Ask me anything about <span id="chatBotName">Acme Help Bot</span>.</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Type your question...">
+                <button id="sendBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'sk-6e75cfd0711c46f999409f9353d0b354'; // ← Replace with your real DeepSeek API key
+
+        // ---------- Global variables ----------
+        let botName = 'Acme Help Bot';
+        let knowledgeBase = 'We are open Monday to Friday, 9 AM to 5 PM EST. Returns are accepted within 30 days with receipt. Standard shipping takes 3-5 business days. Express shipping takes 1-2 business days.';
+
+        // ---------- DOM elements ----------
+        const generateBtn = document.getElementById('generateBtn');
+        const embedSection = document.getElementById('embedSection');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatHeader = document.getElementById('chatHeader');
+        const chatBotNameSpan = document.getElementById('chatBotName');
+
+        // ---------- Generate Bot ----------
+        generateBtn.addEventListener('click', () => {
+            const newName = document.getElementById('botName').value.trim();
+            const newKB = document.getElementById('knowledgeBase').value.trim();
+            if (!newKB) {
+                alert('Please enter a knowledge base.');
+                return;
+            }
+            botName = newName || 'Support Bot';
+            knowledgeBase = newKB;
+
+            // Update chat preview header & greeting
+            chatHeader.textContent = botName;
+            chatBotNameSpan.textContent = botName;
+            chatMessages.innerHTML = `<div class="message bot">Hi! 👋 I'm your AI support assistant. Ask me anything about ${botName}.</div>`;
+
+            // Show embed section
+            embedSection.style.display = 'block';
+        });
+
+        // ---------- Safe Message Append ----------
+        function appendMessage(text, sender) {
+            const msg = document.createElement('div');
+            msg.className = 'message ' + sender;
+            msg.textContent = text;   // textContent is safe – never executes code
+            chatMessages.appendChild(msg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // ---------- Send Message (safe, no eval) ----------
+        async function sendMessage() {
+            const question = chatInput.value.trim();
+            if (!question) return;
+            appendMessage(question, 'user');
+            chatInput.value = '';
+
+            const systemPrompt = `You are "${botName}", a customer support agent. Answer ONLY using the knowledge base below. If the answer is not there, say "I don't know." Do not make up information.\n\nKnowledge base:\n${knowledgeBase}`;
+
+            try {
+                const response = await fetch('/api/deepseek', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-chat',
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: question }
+                        ],
+                        temperature: 0.3,
+                        max_tokens: 300
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error?.message || 'API error');
+                const answer = data.choices[0].message.content;
+                appendMessage(answer, 'bot');
+            } catch (err) {
+                appendMessage('Oops! Something went wrong: ' + err.message, 'bot');
+            }
+        }
+
+        // ---------- Event Listeners ----------
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
